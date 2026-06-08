@@ -11,34 +11,26 @@ routes.get('/', (req, res) => {
     });
 });
 
-routes.get('/:id', (req, res) => {
-    const { id } = req.params;
-    db.query('SELECT * FROM voltas WHERE id = ?', [id], (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Erro ao buscar volta' });
-        }
-        if (results.length === 0) {
-            return res.status(404).json({ error: 'Volta não encontrada' });
-        }
-        res.status(200).json(results[0]);
-    });
-});
-
 routes.post('/create', (req, res) => {
     const { tempo, data, corredores_id } = req.body;
 
     if (!corredores_id) {
         return res.status(400).json({ error: 'O campo corredores_id é obrigatório' });
     }
+    if (!tempo) {
+        return res.status(400).json({ error: 'O campo tempo é obrigatório' });
+    }
+
+    const dataVolta = data || new Date();
 
     db.query(
         'INSERT INTO voltas (tempo, data, corredores_id) VALUES (?, ?, ?)',
-        [tempo, data, corredores_id],
+        [tempo, dataVolta, corredores_id],
         (err, result) => {
             if (err) {
                 return res.status(500).json({ error: 'Erro ao criar volta' });
             }
-            res.status(201).json({ id: result.insertId, tempo, data, corredores_id });
+            res.status(201).json({ id: result.insertId, tempo, data: dataVolta, corredores_id });
         }
     );
 });
@@ -66,7 +58,7 @@ routes.put('/:id', (req, res) => {
     );
 });
 
-routes.delete('/delete/:id', (req, res) => {
+routes.delete('/:id', (req, res) => {
     const { id } = req.params;
     db.query('DELETE FROM voltas WHERE id = ?', [id], (err, result) => {
         if (err) {
@@ -76,6 +68,19 @@ routes.delete('/delete/:id', (req, res) => {
             return res.status(404).json({ error: 'Volta não encontrada' });
         }
         res.status(200).json({ message: 'Volta deletada com sucesso' });
+    });
+});
+
+routes.get('/:id', (req, res) => {
+    const { id } = req.params;
+    db.query('SELECT * FROM voltas WHERE id = ?', [id], (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: 'Erro ao buscar volta' });
+        }
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Volta não encontrada' });
+        }
+        res.status(200).json(results[0]);
     });
 });
 
